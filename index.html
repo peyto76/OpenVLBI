@@ -174,6 +174,8 @@ tr:hover td{background:rgba(43,127,255,.03);}
 /* LIVE DOT */
 .ldot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 1.8s ease-in-out infinite;margin-right:5px;vertical-align:middle;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 </head>
 <body>
 
@@ -196,7 +198,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
 <!-- TOAST -->
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg"></span></div>
 
-<!-- ═══════════ HOME ═══════════ -->
+<!-- =========== HOME =========== -->
 <div class="page active" id="page-home">
   <div class="hero">
     <div class="hero-grid"></div>
@@ -271,7 +273,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ NETWORK MAP ═══════════ -->
+<!-- =========== NETWORK MAP =========== -->
 <div class="page" id="page-network">
   <div class="section">
     <div class="sec-label">Global Network</div>
@@ -290,7 +292,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
           </div>
         </div>
         <div style="position:relative;">
-          <canvas id="mapCanvas" style="width:100%;display:block;cursor:crosshair;"></canvas>
+          <svg id="mapSVG" style="width:100%;display:block;cursor:crosshair;background:#080f1d;border-radius:0 0 14px 14px;"></svg>
           <div id="mapEmpty" class="empty" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg2);">
             <div class="empty-icon">🌍</div>
             <h3>No stations yet</h3>
@@ -328,7 +330,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ SCHEDULE ═══════════ -->
+<!-- =========== SCHEDULE =========== -->
 <div class="page" id="page-schedule">
   <div class="section">
     <div class="sec-label">Observation Coordination</div>
@@ -370,7 +372,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ UV COVERAGE ═══════════ -->
+<!-- =========== UV COVERAGE =========== -->
 <div class="page" id="page-uvcoverage">
   <div class="section">
     <div class="sec-label">Aperture Synthesis</div>
@@ -454,7 +456,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ UPLOAD ═══════════ -->
+<!-- =========== UPLOAD =========== -->
 <div class="page" id="page-upload">
   <div class="section">
     <div class="sec-label">Data Submission</div>
@@ -505,7 +507,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ CORRELATOR ═══════════ -->
+<!-- =========== CORRELATOR =========== -->
 <div class="page" id="page-correlate">
   <div class="section">
     <div class="sec-label">Distributed Correlator</div>
@@ -536,7 +538,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ ARCHIVE ═══════════ -->
+<!-- =========== ARCHIVE =========== -->
 <div class="page" id="page-archive">
   <div class="section">
     <div class="sec-label">Results Archive</div>
@@ -551,7 +553,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ REGISTER ═══════════ -->
+<!-- =========== REGISTER =========== -->
 <div class="page" id="page-register">
   <div class="section">
     <div class="sec-label">Join The Network</div>
@@ -573,8 +575,8 @@ tr:hover td{background:rgba(43,127,255,.03);}
               <div class="form-group full"><label>Station name / callsign *</label><input id="rCallsign" type="text" placeholder="e.g. W5XYZ-VLBI or Backyard Radio Obs."/></div>
               <div class="form-group"><label>Your name *</label><input id="rName" type="text" placeholder="Full name"/></div>
               <div class="form-group"><label>Email address *</label><input id="rEmail" type="email" placeholder="you@example.com"/></div>
-              <div class="form-group"><label>Latitude (decimal &#176;) *</label><input id="rLat" type="number" placeholder="35.1234" step="0.0001" oninput="updateRegPreview()"/></div>
-              <div class="form-group"><label>Longitude (decimal &#176;) *</label><input id="rLon" type="number" placeholder="-106.5678" step="0.0001" oninput="updateRegPreview()"/></div>
+              <div class="form-group"><label>Latitude (decimal &#176;) *</label><input id="rLat" type="number" placeholder="35.1234" step="0.0001" oninput="renderRegPreview()"/></div>
+              <div class="form-group"><label>Longitude (decimal &#176;) *</label><input id="rLon" type="number" placeholder="-106.5678" step="0.0001" oninput="renderRegPreview()"/></div>
               <div class="form-group"><label>Altitude (m ASL)</label><input id="rAlt" type="number" placeholder="150"/></div>
               <div class="form-group"><label>Country</label>
                 <select id="rCountry"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Germany</option><option>France</option><option>Netherlands</option><option>Spain</option><option>Italy</option><option>Japan</option><option>South Korea</option><option>Australia</option><option>New Zealand</option><option>Chile</option><option>South Africa</option><option>Brazil</option><option>India</option><option>Other</option></select>
@@ -640,7 +642,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
         <!-- Map preview -->
         <div class="card">
           <div class="card-title">YOUR LOCATION PREVIEW</div>
-          <canvas id="regMapPreview" width="260" height="130" style="width:100%;border-radius:8px;background:var(--bg3);display:block;"></canvas>
+          <svg id="regMapPreview" viewBox="0 0 260 130" style="width:100%;border-radius:8px;background:#0d1828;display:block;height:130px;"></svg>
           <div id="regMapMsg" style="font-size:11px;color:var(--muted);margin-top:.5rem;text-align:center;">Enter coordinates above to see your position.</div>
         </div>
         <div class="card">
@@ -666,7 +668,7 @@ tr:hover td{background:rgba(43,127,255,.03);}
   </div>
 </div>
 
-<!-- ═══════════ DOCS ═══════════ -->
+<!-- =========== DOCS =========== -->
 <div class="page" id="page-docs">
   <div class="section">
     <div class="sec-label">Documentation</div>
@@ -842,173 +844,16 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{
 // ===
 // World coastline outline -- simplified polygons for major landmasses
 // Coordinates as [lon, lat] arrays, drawn on canvas using equirectangular projection
-const LANDMASSES = [
-  // North America
-  [[-168,72],[-140,70],[-130,55],[-124,49],[-117,33],[-110,23],[-87,15],[-84,10],[-77,8],[-72,12],[-62,12],[-59,8],[-52,4],[-50,1],[-52,4],[-55,2],[-59,8],[-62,10],[-65,11],[-68,13],[-70,12],[-74,11],[-77,8],[-80,9],[-84,10],[-87,16],[-89,18],[-87,22],[-87,24],[-91,29],[-89,30],[-85,30],[-80,25],[-80,28],[-76,35],[-72,41],[-70,44],[-67,47],[-65,44],[-62,46],[-64,48],[-67,48],[-66,45],[-70,47],[-74,46],[-78,44],[-80,42],[-83,45],[-87,48],[-91,48],[-95,49],[-100,49],[-110,49],[-120,49],[-124,49],[-127,50],[-130,55],[-136,58],[-140,60],[-148,61],[-153,58],[-158,58],[-163,60],[-162,64],[-165,65],[-168,66],[-168,72]],
-  // Greenland
-  [[-52,82],[-25,82],[-18,77],[-20,70],[-25,65],[-35,65],[-42,67],[-46,68],[-52,70],[-56,77],[-52,82]],
-  // South America
-  [[-80,10],[-77,8],[-72,12],[-62,12],[-59,8],[-52,4],[-50,1],[-50,-2],[-44,-2],[-36,-5],[-35,-8],[-35,-12],[-38,-15],[-40,-20],[-43,-23],[-48,-28],[-51,-30],[-53,-34],[-58,-38],[-65,-38],[-65,-42],[-68,-46],[-72,-50],[-74,-52],[-68,-53],[-65,-55],[-68,-55],[-72,-53],[-75,-52],[-75,-50],[-72,-43],[-70,-30],[-70,-18],[-75,-14],[-78,-5],[-80,0],[-78,2],[-76,5],[-74,8],[-77,8],[-80,10]],
-  // Europe (western + northern, excludes Russia)
-  [[-9,36],[-9,39],[-8,44],[-2,44],[0,46],[2,44],[6,44],[10,44],[14,44],[16,42],[18,40],[14,44],[12,44],[8,44],[6,44],[4,44],[2,50],[4,52],[6,54],[8,55],[10,58],[8,58],[6,58],[4,56],[5,54],[8,56],[10,58],[12,58],[16,58],[18,60],[20,60],[22,58],[24,56],[26,56],[28,58],[30,60],[28,62],[26,64],[24,64],[28,65],[32,68],[30,70],[28,72],[20,70],[18,70],[16,62],[14,62],[12,60],[10,58],[8,58],[8,55],[6,54],[4,52],[2,50],[0,50],[-2,49],[-4,48],[-8,44],[-9,36]],
-  // Iberian Peninsula (Spain + Portugal)
-  [[-9,36],[-9,39],[-8,44],[-2,44],[0,44],[3,42],[3,40],[1,38],[-1,37],[-5,36],[-6,37],[-9,39],[-9,36]],
-  // Scandinavia
-  [[5,58],[8,56],[10,58],[12,58],[16,58],[20,60],[24,64],[28,62],[30,60],[28,58],[22,58],[20,58],[18,60],[16,62],[14,62],[12,60],[10,58],[8,58],[6,58],[5,58]],
-  // Eastern Europe + Balkans
-  [[14,44],[18,40],[22,38],[26,38],[28,41],[30,42],[36,42],[36,41],[30,40],[26,38],[22,38],[20,44],[16,48],[14,50],[12,52],[14,54],[18,54],[22,54],[26,56],[28,56],[30,56],[32,54],[36,56],[40,58],[44,60],[48,60],[50,58],[54,56],[54,54],[52,52],[50,50],[48,48],[46,46],[44,44],[42,42],[40,42],[36,42],[30,42],[28,41],[26,40],[24,40],[20,40],[18,40],[16,44],[14,44]],
-  // Russia (full outline - one clean polygon going clockwise)
-  [[28,72],[32,68],[36,70],[40,74],[50,78],[60,78],[70,76],[80,74],[90,76],[100,74],[110,72],[120,70],[130,68],[140,66],[142,66],[146,62],[148,58],[148,46],[144,46],[138,48],[134,50],[130,54],[128,56],[124,60],[120,60],[116,62],[108,70],[100,72],[90,74],[80,74],[68,76],[58,78],[48,78],[40,74],[36,70],[32,68],[30,70],[28,72]],
-  // Russia southern strip (Siberia detail)
-  [[36,56],[40,58],[44,60],[48,60],[52,58],[56,60],[60,58],[64,56],[68,56],[72,54],[76,54],[80,50],[84,48],[88,46],[92,44],[96,40],[100,38],[104,38],[108,36],[112,38],[116,40],[120,44],[126,50],[130,54],[134,50],[138,48],[142,46],[146,44],[148,46],[148,58],[146,62],[142,66],[138,66],[134,64],[130,60],[128,56],[124,60],[120,60],[116,62],[108,70],[100,72],[90,74],[80,74],[80,50],[84,48],[88,46],[92,44],[96,40],[100,38],[104,38],[108,36],[112,36],[116,34],[120,34],[122,32],[122,30],[120,28],[116,22],[112,20],[108,20],[104,20],[104,24],[100,24],[96,22],[90,22],[86,20],[82,18],[76,22],[72,22],[68,22],[64,24],[60,22],[56,24],[52,26],[48,30],[44,36],[40,38],[36,40],[34,38],[32,38],[30,38],[28,38],[26,38],[22,38],[20,40],[18,40],[20,44],[22,44],[26,44],[28,44],[32,46],[36,48],[40,50],[44,50],[48,50],[50,50],[50,52],[48,52],[44,52],[40,52],[36,52],[36,56]],
-  // Middle East (Turkey + Levant + Arabian Peninsula + Iran)
-  [[26,38],[28,38],[30,40],[36,42],[40,42],[42,42],[44,40],[46,38],[48,36],[50,34],[52,34],[54,36],[56,36],[58,34],[60,32],[60,28],[58,24],[56,22],[54,20],[52,18],[48,14],[44,12],[42,12],[42,16],[44,18],[44,22],[42,22],[40,22],[38,20],[36,18],[34,16],[36,14],[38,12],[44,12],[48,14],[50,18],[50,22],[52,24],[54,24],[56,22],[58,22],[60,20],[62,22],[64,22],[66,24],[68,22],[70,22],[72,22],[76,22],[76,28],[74,30],[72,30],[68,26],[66,26],[64,26],[62,26],[60,28],[60,32],[58,34],[56,36],[54,36],[52,34],[50,34],[48,36],[46,38],[44,40],[42,42],[40,42],[38,42],[36,42],[32,42],[30,42],[28,40],[26,38]],
-  // India subcontinent
-  [[66,24],[68,24],[72,22],[76,10],[80,8],[82,14],[84,14],[86,20],[82,18],[80,14],[78,8],[76,10],[72,22],[68,22],[66,24]],
-  // China + Mongolia
-  [[76,40],[80,44],[84,48],[88,46],[92,44],[96,40],[100,38],[104,38],[108,36],[112,36],[116,34],[120,34],[122,32],[122,30],[120,28],[116,22],[112,20],[108,20],[104,20],[104,24],[100,24],[96,22],[90,22],[86,20],[82,18],[80,22],[80,26],[76,28],[76,34],[76,40]],
-  // Southeast Asia (Indochina + Malay Peninsula)
-  [[96,22],[100,22],[104,20],[108,20],[108,16],[110,14],[110,10],[108,4],[108,2],[106,2],[104,2],[102,4],[100,6],[100,4],[102,2],[104,2],[106,0],[106,-2],[104,-4],[102,-4],[100,-2],[96,4],[96,6],[98,8],[100,12],[96,16],[96,22]],
-  // Indochina east coast
-  [[100,22],[104,20],[108,20],[110,16],[110,10],[108,4],[104,2],[100,4],[98,8],[100,12],[96,16],[96,22],[100,22]],
-  // Korea
-  [[126,34],[128,34],[130,36],[130,38],[128,40],[126,38],[124,36],[126,34]],
-  // Japan (Honshu)
-  [[130,31],[132,33],[134,35],[136,36],[138,38],[140,40],[140,44],[142,44],[144,42],[142,40],[140,38],[138,36],[136,34],[134,34],[132,34],[130,32],[130,31]],
-  // Africa
-  [[-18,16],[-16,12],[-12,8],[-8,4],[0,4],[4,2],[8,4],[10,6],[14,4],[16,2],[16,-2],[14,-4],[10,-6],[12,-18],[16,-22],[18,-28],[18,-34],[20,-36],[28,-34],[32,-28],[34,-22],[36,-18],[40,-12],[42,-12],[42,-8],[40,-2],[42,2],[40,4],[42,8],[44,12],[44,18],[42,22],[40,22],[38,20],[36,18],[34,16],[28,16],[24,14],[20,16],[16,16],[12,14],[8,14],[4,14],[0,16],[-4,16],[-8,16],[-12,16],[-16,16],[-18,16]],
-  // Australia
-  [[114,-22],[116,-20],[120,-20],[122,-18],[124,-16],[128,-14],[132,-12],[136,-12],[138,-14],[140,-14],[142,-12],[144,-14],[148,-16],[150,-22],[152,-24],[152,-30],[150,-38],[146,-38],[140,-36],[136,-36],[132,-32],[128,-32],[122,-34],[116,-34],[114,-30],[112,-26],[114,-22]],
-  // UK + Ireland
-  [[-5,50],[-4,51],[-3,52],[-2,54],[-4,56],[-6,58],[-4,60],[-2,60],[0,58],[2,54],[0,52],[-2,51],[-4,50],[-5,50]],
-  // Iceland
-  [[-24,64],[-22,63],[-14,63],[-13,65],[-14,66],[-20,66],[-24,64]],
-  // Madagascar
-  [[44,-12],[46,-14],[50,-18],[50,-22],[48,-24],[44,-20],[44,-16],[44,-12]],
-  // Philippines
-  [[118,8],[120,10],[122,12],[124,12],[126,8],[124,6],[122,8],[120,8],[118,8]],
-  // Borneo
-  [[108,4],[112,4],[116,4],[118,6],[118,2],[116,0],[112,0],[108,2],[108,4]],
-  // Sumatra
-  [[96,4],[100,2],[104,2],[106,0],[106,-2],[104,-4],[102,-4],[100,-2],[96,4]],
-  // New Guinea
-  [[132,-2],[134,-4],[138,-6],[142,-6],[146,-6],[148,-6],[148,-8],[144,-8],[140,-6],[136,-4],[132,-4],[132,-2]],
-  // New Zealand South Island
-  [[166,-46],[168,-46],[170,-44],[172,-42],[174,-42],[172,-44],[170,-46],[168,-46],[166,-46]],
-  // Taiwan
-  [[120,22],[122,22],[122,24],[120,24],[120,22]]
-];
 
-function lonLatToCanvas(lon, lat, W, H) {
-  const x = ((lon + 180) / 360) * W;
-  const y = ((90 - lat) / 180) * H;
-  return [x, y];
-}
 
-function drawEarth(canvasId, W, H, stationList, rotating) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
 
-  // Ocean
-  const oceanGrad = ctx.createRadialGradient(W*0.4,H*0.35,0,W*0.5,H*0.5,W*0.52);
-  oceanGrad.addColorStop(0,'#162540');
-  oceanGrad.addColorStop(1,'#04080f');
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(W/2,H/2,W/2-2,0,Math.PI*2);
-  ctx.fillStyle=oceanGrad;
-  ctx.fill();
 
-  // Grid lines
-  ctx.globalAlpha=0.06;
-  ctx.strokeStyle='#4090ff';
-  ctx.lineWidth=0.5;
-  for(let lat=-60;lat<=60;lat+=30){
-    const [,y]=lonLatToCanvas(0,lat,W,H);
-    ctx.beginPath();ctx.moveTo(2,y);ctx.lineTo(W-2,y);ctx.stroke();
-  }
-  for(let lon=-150;lon<=180;lon+=30){
-    const [x,]=lonLatToCanvas(lon,0,W,H);
-    ctx.beginPath();ctx.moveTo(x,2);ctx.lineTo(x,H-2);ctx.stroke();
-  }
-  ctx.globalAlpha=1;
 
-  // Land
-  ctx.fillStyle='#1a3358';
-  ctx.strokeStyle='rgba(64,144,255,0.18)';
-  ctx.lineWidth=0.6;
-  LANDMASSES.forEach(poly=>{
-    if(poly.length<3) return;
-    ctx.beginPath();
-    poly.forEach(([lon,lat],i)=>{
-      const [x,y]=lonLatToCanvas(lon,lat,W,H);
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  });
-
-  // Clip to circle
-  ctx.restore();
-  ctx.save();
-  ctx.globalCompositeOperation='destination-in';
-  ctx.beginPath();
-  ctx.arc(W/2,H/2,W/2-2,0,Math.PI*2);
-  ctx.fillStyle='#fff';
-  ctx.fill();
-  ctx.restore();
-
-  // Globe border
-  ctx.beginPath();
-  ctx.arc(W/2,H/2,W/2-2,0,Math.PI*2);
-  ctx.strokeStyle='rgba(64,144,255,0.25)';
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-
-  // Stations
-  if(stationList && stationList.length>0){
-    // Draw baselines first
-    ctx.setLineDash([4,4]);
-    ctx.strokeStyle='rgba(43,127,255,0.3)';
-    ctx.lineWidth=0.8;
-    for(let i=0;i<stationList.length;i++){
-      for(let j=i+1;j<stationList.length;j++){
-        const [x1,y1]=lonLatToCanvas(+stationList[i].lon,+stationList[i].lat,W,H);
-        const [x2,y2]=lonLatToCanvas(+stationList[j].lon,+stationList[j].lat,W,H);
-        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-      }
-    }
-    ctx.setLineDash([]);
-
-    // Station dots
-    stationList.forEach(s=>{
-      const [x,y]=lonLatToCanvas(+s.lon,+s.lat,W,H);
-      // Glow ring
-      ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);
-      ctx.strokeStyle='rgba(0,232,200,0.2)';ctx.lineWidth=1;ctx.stroke();
-      // Dot
-      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
-      ctx.fillStyle='#00e8c8';ctx.fill();
-      // Label
-      ctx.fillStyle='rgba(0,232,200,0.85)';
-      ctx.font='bold 9px monospace';
-      ctx.fillText(s.callsign.split('-')[0].substring(0,6),x+8,y-4);
-    });
-  }
-}
 
 // Animated hero earth
 let earthAngle = 0;
-function drawHeroEarth(){
-  const canvas=document.getElementById('earthCanvas');
-  if(!canvas)return;
-  // Just draw static accurate earth with stations
-  drawEarth('earthCanvas',300,300,stations,false);
-}
-drawHeroEarth();
+
+
 
 // ===
 // HOME STATS
@@ -1022,7 +867,7 @@ function updateHomeStats(){
   } else {
     document.getElementById('homeStatBaseline').textContent = '--';
   }
-  drawHeroEarth();
+  
 }
 
 // ===
@@ -1048,21 +893,19 @@ function computeMaxBaseline(){
 // ===
 function renderNetworkMap(){
   const mapEmpty=document.getElementById('mapEmpty');
-  const canvas=document.getElementById('mapCanvas');
+  // D3 handles map rendering
 
   // Update sidebar list
   const listEl=document.getElementById('stationListSidebar');
   if(stations.length===0){
     listEl.innerHTML='<div class="empty" style="padding:1.5rem 0;"><div style="font-size:1.5rem;opacity:.3;margin-bottom:.5rem;">&#128225;</div><div style="font-size:.8rem;">No stations registered yet.</div></div>';
     mapEmpty.style.display='flex';
-    canvas.style.display='none';
+    document.getElementById('mapSVG').style.display='none';
   } else {
     mapEmpty.style.display='none';
-    canvas.style.display='block';
+    document.getElementById('mapSVG').style.display='block';
     // Set canvas size
-    const W=canvas.parentElement.clientWidth||800;
-    const H=Math.round(W*0.5);
-    drawWorldMap(canvas,W,H);
+    renderD3Map();
     listEl.innerHTML=stations.map((s,i)=>`
       <div class="spec-row" onclick="showStationDetail(${i})" style="cursor:pointer;">
         <span class="spec-lbl">${s.callsign}</span>
@@ -1079,59 +922,7 @@ function renderNetworkMap(){
   document.getElementById('netStatCountries').textContent=countries;
 }
 
-function drawWorldMap(canvas,W,H){
-  canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d');
-  // Ocean
-  ctx.fillStyle='#080f1d'; ctx.fillRect(0,0,W,H);
-  // Grid
-  ctx.strokeStyle='rgba(43,127,255,0.06)'; ctx.lineWidth=0.5;
-  for(let lat=-60;lat<=60;lat+=30){const [,y]=lonLatToCanvas(0,lat,W,H);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  for(let lon=-150;lon<=180;lon+=30){const [x]=lonLatToCanvas(lon,0,W,H);ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  // Land
-  ctx.fillStyle='#111f35'; ctx.strokeStyle='rgba(43,127,255,0.14)'; ctx.lineWidth=0.5;
-  LANDMASSES.forEach(poly=>{
-    if(poly.length<3)return;
-    ctx.beginPath();
-    poly.forEach(([lon,lat],i)=>{
-      const [x,y]=lonLatToCanvas(lon,lat,W,H);
-      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-  });
-  // Baselines
-  ctx.setLineDash([5,4]);
-  ctx.strokeStyle='rgba(43,127,255,0.3)'; ctx.lineWidth=0.9;
-  for(let i=0;i<stations.length;i++){
-    for(let j=i+1;j<stations.length;j++){
-      const [x1,y1]=lonLatToCanvas(+stations[i].lon,+stations[i].lat,W,H);
-      const [x2,y2]=lonLatToCanvas(+stations[j].lon,+stations[j].lat,W,H);
-      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    }
-  }
-  ctx.setLineDash([]);
-  // Stations
-  stations.forEach((s,idx)=>{
-    const [x,y]=lonLatToCanvas(+s.lon,+s.lat,W,H);
-    ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);
-    ctx.strokeStyle='rgba(0,232,200,0.18)';ctx.lineWidth=1;ctx.stroke();
-    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
-    ctx.fillStyle='#00e8c8';ctx.fill();
-    ctx.fillStyle='rgba(0,232,200,0.85)';
-    ctx.font='bold 10px monospace';
-    ctx.fillText(s.callsign.substring(0,8),x+9,y-4);
-  });
-  // Attach click handler
-  canvas.onclick = function(e){
-    const rect=canvas.getBoundingClientRect();
-    const scaleX=W/rect.width, scaleY=H/rect.height;
-    const mx=(e.clientX-rect.left)*scaleX, my=(e.clientY-rect.top)*scaleY;
-    stations.forEach((s,i)=>{
-      const [sx,sy]=lonLatToCanvas(+s.lon,+s.lat,W,H);
-      if(Math.hypot(mx-sx,my-sy)<18) showStationDetail(i);
-    });
-  };
-}
+
 
 function showStationDetail(i){
   const s=stations[i];
@@ -1247,31 +1038,7 @@ function saveStations(){
 }
 
 // Location preview on registration form
-function updateRegPreview(){
-  const lat=parseFloat(document.getElementById('rLat').value);
-  const lon=parseFloat(document.getElementById('rLon').value);
-  const canvas=document.getElementById('regMapPreview');
-  const W=canvas.width||260, H=canvas.height||130;
-  const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#080f1d';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#111f35';ctx.strokeStyle='rgba(43,127,255,0.14)';ctx.lineWidth=0.5;
-  LANDMASSES.forEach(poly=>{
-    if(poly.length<3)return;
-    ctx.beginPath();
-    poly.forEach(([lo,la],i)=>{const[x,y]=lonLatToCanvas(lo,la,W,H);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
-    ctx.closePath();ctx.fill();ctx.stroke();
-  });
-  if(!isNaN(lat)&&!isNaN(lon)&&lat>=-90&&lat<=90&&lon>=-180&&lon<=180){
-    const[x,y]=lonLatToCanvas(lon,lat,W,H);
-    ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);
-    ctx.strokeStyle='rgba(0,232,200,0.3)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
-    ctx.fillStyle='#00e8c8';ctx.fill();
-    document.getElementById('regMapMsg').textContent=lat.toFixed(4)+'&#176;, '+lon.toFixed(4)+'&#176;';
-  } else {
-    document.getElementById('regMapMsg').textContent='Enter coordinates above to see your position.';
-  }
-}
+
 
 // ===
 // UV COVERAGE
@@ -1478,23 +1245,268 @@ function showDocSection(btn, id){
 // ===
 // INIT
 // ===
-updateHomeStats();
-updateRegPreview();
-// Draw initial register map preview
-setTimeout(()=>{
-  const c=document.getElementById('regMapPreview');
-  if(c){
-    const ctx=c.getContext('2d');
-    ctx.fillStyle='#080f1d';ctx.fillRect(0,0,c.width,c.height);
-    ctx.fillStyle='#111f35';ctx.strokeStyle='rgba(43,127,255,0.14)';ctx.lineWidth=0.5;
-    LANDMASSES.forEach(poly=>{
-      if(poly.length<3)return;
-      ctx.beginPath();
-      poly.forEach(([lo,la],i)=>{const[x,y]=lonLatToCanvas(lo,la,c.width,c.height);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
-      ctx.closePath();ctx.fill();ctx.stroke();
+
+// =============================================
+// D3 + Natural Earth Real Map Rendering
+// =============================================
+
+const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+let worldData = null;
+
+// Load world data once, then render everywhere needed
+function loadWorldData(callback) {
+  if (worldData) { callback(worldData); return; }
+  fetch(GEO_URL)
+    .then(r => r.json())
+    .then(topo => {
+      worldData = topojson.feature(topo, topo.objects.countries);
+      callback(worldData);
+    })
+    .catch(e => console.error('World data load failed:', e));
+}
+
+// -- HERO GLOBE (orthographic projection, spinning slowly) --
+function initHeroEarth() {
+  const svg = d3.select('#heroEarth');
+  const W = 320, H = 320, cx = 160, cy = 160, R = 148;
+
+  // Ocean circle
+  svg.append('defs')
+    .append('clipPath').attr('id', 'globeClip')
+    .append('circle').attr('cx', cx).attr('cy', cy).attr('r', R);
+
+  // Glow ring
+  const defs = svg.select('defs');
+  const radGrad = defs.append('radialGradient')
+    .attr('id','globeGlow').attr('cx','38%').attr('cy','32%').attr('r','60%');
+  radGrad.append('stop').attr('offset','0%').attr('stop-color','#1a3358');
+  radGrad.append('stop').attr('offset','100%').attr('stop-color','#04080f');
+
+  // Outer glow
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R+8)
+    .attr('fill','none').attr('stroke','rgba(43,127,255,0.15)').attr('stroke-width',8);
+
+  // Ocean fill
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R)
+    .attr('fill','url(#globeGlow)').attr('stroke','rgba(43,127,255,0.3)').attr('stroke-width',1);
+
+  // Land + graticule group
+  const g = svg.append('g').attr('clip-path','url(#globeClip)');
+
+  // Projection
+  const proj = d3.geoOrthographic()
+    .scale(R).translate([cx, cy])
+    .clipAngle(90).rotate([0, -20]);
+
+  const path = d3.geoPath().projection(proj);
+
+  // Graticule
+  const grat = d3.geoGraticule()();
+  g.append('path').datum(grat)
+    .attr('class','graticule')
+    .attr('d', path)
+    .attr('fill','none')
+    .attr('stroke','rgba(43,127,255,0.1)')
+    .attr('stroke-width','0.5');
+
+  // Land paths - rendered once data loads
+  loadWorldData(geo => {
+    g.selectAll('.country')
+      .data(geo.features)
+      .enter().append('path')
+      .attr('class','country')
+      .attr('d', path)
+      .attr('fill','#1a3358')
+      .attr('stroke','rgba(64,144,255,0.3)')
+      .attr('stroke-width','0.5');
+
+    // Station dots on globe
+    renderGlobeStations(g, proj);
+
+    // Slow rotation animation
+    let angle = 0;
+    d3.timer(() => {
+      angle += 0.08;
+      proj.rotate([angle, -20]);
+      g.selectAll('path').attr('d', path);
+      renderGlobeStations(g, proj);
     });
+  });
+
+  // Border ring on top
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R)
+    .attr('fill','none').attr('stroke','rgba(43,127,255,0.35)').attr('stroke-width',1.2);
+}
+
+function renderGlobeStations(g, proj) {
+  // Remove old station elements
+  g.selectAll('.globe-station,.globe-baseline').remove();
+
+  if (stations.length < 1) return;
+
+  // Draw baselines first
+  for (let i = 0; i < stations.length; i++) {
+    for (let j = i+1; j < stations.length; j++) {
+      const line = {type:'LineString', coordinates:[[+stations[i].lon,+stations[i].lat],[+stations[j].lon,+stations[j].lat]]};
+      const path = d3.geoPath().projection(proj);
+      g.append('path').datum(line)
+        .attr('class','globe-baseline')
+        .attr('d', path)
+        .attr('fill','none')
+        .attr('stroke','rgba(43,127,255,0.4)')
+        .attr('stroke-width','0.9')
+        .attr('stroke-dasharray','3,3');
+    }
   }
-},100);
+
+  // Draw station dots
+  stations.forEach(s => {
+    const pt = proj([+s.lon, +s.lat]);
+    if (!pt) return;
+    // Check if on visible side
+    const rot = proj.rotate();
+    const visible = d3.geoDistance([+s.lon,+s.lat], [-rot[0], -rot[1]]) < Math.PI/2;
+    if (!visible) return;
+    g.append('circle').attr('class','globe-station')
+      .attr('cx', pt[0]).attr('cy', pt[1]).attr('r', 6)
+      .attr('fill','#00e8c8').attr('stroke','rgba(0,232,200,0.3)').attr('stroke-width',6)
+      .attr('opacity','0.9');
+    g.append('circle').attr('class','globe-station')
+      .attr('cx', pt[0]).attr('cy', pt[1]).attr('r', 3.5)
+      .attr('fill','#00e8c8');
+  });
+}
+
+// -- FLAT WORLD MAP (equirectangular) --
+function renderD3Map() {
+  const svgEl = document.getElementById('mapSVG');
+  if (!svgEl) return;
+  const W = svgEl.parentElement.clientWidth || 800;
+  const H = Math.round(W * 0.5);
+  svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svgEl.setAttribute('height', H);
+
+  const svg = d3.select('#mapSVG');
+  svg.selectAll('*').remove();
+
+  const proj = d3.geoEquirectangular()
+    .scale(W / (2 * Math.PI))
+    .translate([W/2, H/2]);
+
+  const path = d3.geoPath().projection(proj);
+
+  // Ocean bg
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill','#080f1d');
+
+  // Graticule
+  svg.append('path').datum(d3.geoGraticule()())
+    .attr('d', path).attr('fill','none')
+    .attr('stroke','rgba(43,127,255,0.07)').attr('stroke-width','0.5');
+
+  loadWorldData(geo => {
+    svg.selectAll('.country')
+      .data(geo.features)
+      .enter().append('path')
+      .attr('class','country')
+      .attr('d', path)
+      .attr('fill','#111f35')
+      .attr('stroke','rgba(43,127,255,0.2)')
+      .attr('stroke-width','0.6')
+      .style('cursor', 'default');
+
+    // Baselines
+    for (let i = 0; i < stations.length; i++) {
+      for (let j = i+1; j < stations.length; j++) {
+        const line = {type:'LineString', coordinates:[[+stations[i].lon,+stations[i].lat],[+stations[j].lon,+stations[j].lat]]};
+        svg.append('path').datum(line)
+          .attr('d', path).attr('fill','none')
+          .attr('stroke','rgba(43,127,255,0.35)')
+          .attr('stroke-width','1')
+          .attr('stroke-dasharray','5,4');
+      }
+    }
+
+    // Station dots
+    stations.forEach((s, idx) => {
+      const pt = proj([+s.lon, +s.lat]);
+      if (!pt) return;
+      svg.append('circle')
+        .attr('cx', pt[0]).attr('cy', pt[1]).attr('r', 10)
+        .attr('fill','rgba(0,232,200,0.12)')
+        .attr('stroke','rgba(0,232,200,0.3)').attr('stroke-width','1');
+      svg.append('circle')
+        .attr('cx', pt[0]).attr('cy', pt[1]).attr('r', 5.5)
+        .attr('fill','#00e8c8')
+        .style('cursor','pointer')
+        .on('click', () => showStationDetail(idx));
+      svg.append('text')
+        .attr('x', pt[0]+9).attr('y', pt[1]-4)
+        .attr('fill','rgba(0,232,200,0.85)')
+        .attr('font-size','9px').attr('font-family','monospace')
+        .attr('pointer-events','none')
+        .text(s.callsign.substring(0,8));
+    });
+  });
+}
+
+// -- REGISTRATION PREVIEW MAP --
+function renderRegPreview() {
+  const lat = parseFloat(document.getElementById('rLat').value);
+  const lon = parseFloat(document.getElementById('rLon').value);
+  const svgEl = document.getElementById('regMapPreview');
+  if (!svgEl) return;
+  const W = 260, H = 130;
+
+  const svg = d3.select('#regMapPreview');
+  svg.selectAll('*').remove();
+
+  const proj = d3.geoEquirectangular()
+    .scale(W / (2 * Math.PI))
+    .translate([W/2, H/2]);
+  const path = d3.geoPath().projection(proj);
+
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill','#080f1d');
+
+  loadWorldData(geo => {
+    svg.selectAll('.country')
+      .data(geo.features)
+      .enter().append('path')
+      .attr('d', path)
+      .attr('fill','#111f35')
+      .attr('stroke','rgba(43,127,255,0.15)')
+      .attr('stroke-width','0.5');
+
+    if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+      const pt = proj([lon, lat]);
+      if (pt) {
+        svg.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('r',9)
+          .attr('fill','rgba(0,232,200,0.15)')
+          .attr('stroke','rgba(0,232,200,0.4)').attr('stroke-width','1.5');
+        svg.append('circle').attr('cx',pt[0]).attr('cy',pt[1]).attr('r',4)
+          .attr('fill','#00e8c8');
+        document.getElementById('regMapMsg').textContent =
+          lat.toFixed(4) + '&#176;, ' + lon.toFixed(4) + '&#176;';
+      }
+    } else {
+      document.getElementById('regMapMsg').textContent = 'Enter coordinates above to see your position.';
+    }
+  });
+}
+
+
+// === INIT ===
+updateHomeStats();
+// Init D3 globe (loads data from CDN)
+if (typeof d3 !== 'undefined' && typeof topojson !== 'undefined') {
+  initHeroEarth();
+  renderRegPreview();
+} else {
+  // D3 not yet loaded - wait for it
+  window.addEventListener('load', () => {
+    initHeroEarth();
+    renderRegPreview();
+  });
+}
 </script>
 </body>
 </html>
